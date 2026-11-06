@@ -99,7 +99,7 @@ function gcal(i){const s=i.date.replace(/-/g,'')+'T'+(i.time||'09:00').replace('
  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(TY[i.type]+': '+i.title)+'&dates='+s+'/'+f}
 function editI(id,pre){if(view==='clientes'&&!id&&!pre)return editC();
  const i=id?D.i.find(x=>x.id===id):Object.assign({type:'vis',title:'',date:ymd(new Date()),time:'09:00',cid:'',alarm:1},pre||{});const c=cl(i.cid);
- openS(`<h2>${id?'Editar':pre?'Confirmar':'Novo'} compromisso</h2>${pre&&pre.say?`<div class="note" style="margin:0 0 6px;display:block">Você disse: “${esc(pre.say)}”<br><b>Confira e toque em Salvar.</b></div>`:''}
+ openS(`<h2>${id?'Editar':pre?'Confirmar':'Novo'} compromisso</h2>${pre&&pre.say?`<div class="note" style="margin:0 0 6px;display:block">Você disse: “${esc(pre.say)}”<br><b>Confira e toque em Salvar.</b>${pre.newc?`<br>Cliente “${esc(pre.newc)}” não está cadastrado. <button class="b o" style="padding:6px 10px;font-size:14px" data-n="${esc(pre.newc)}" onclick="addCl(this.dataset.n)">Cadastrar agora</button>`:''}</div>`:''}
  <label>Tipo</label><select id="f_t">${Object.entries(TY).map(([k,v])=>`<option value="${k}" ${i.type===k?'selected':''}>${v}</option>`).join('')}</select>
  <label>Descrição</label><input id="f_ti" value="${esc(i.title)}" placeholder="Ex.: visita na obra">
  <label>Cliente</label><select id="f_c"><option value="">— nenhum —</option>${D.c.map(c=>`<option value="${c.id}" ${i.cid===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
@@ -146,19 +146,23 @@ function parseV(say){let T=nz(say).replace(/[.,!?]/g,' ');
  if(m){h=+m[1];mi=m[2]?+m[2]:m[3]?(m[3].includes('meia')?30:15):0}else if(/meio.?dia/.test(T)){h=12}
  if(h!==null){if(/tarde|noite/.test(T)&&h<12)h+=12;if(h>23)h=null}
  o.time=h===null?'':p2(h)+':'+p2(mi);
+ if(h===null){if(/\bagora\b/.test(T)){const x=new Date();o.date=ymd(x);o.time=p2(x.getHours())+':'+p2(x.getMinutes())}else if(m=T.match(/daqui a (\d+|\w+) (minutos?|horas?)/)){const q=+m[1]||NUM[m[1]]||1,x=new Date(Date.now()+q*(m[2][0]==='m'?6e4:36e5));o.date=ymd(x);o.time=p2(x.getHours())+':'+p2(x.getMinutes())}}
  let best=null,bl=0;D.c.forEach(c=>{const full=nz(c.name),f=full.split(' ')[0];if(T.includes(full)&&full.length>bl){best=c;bl=full.length}else if(f.length>=3&&new RegExp('\\b'+f+'\\b').test(T)&&f.length>bl){best=c;bl=f.length}});
- if(best)o.cid=best.id;
+ if(best)o.cid=best.id;else{const q=say.match(/cliente\s+(?:chamado\s+)?([A-ZÀ-Ý][\wà-ÿ]+)/)||say.match(/\b(?:do|da|com o|com a|para o|para a|ao)\s+([A-ZÀ-Ý][\wà-ÿ]+)/);if(q)o.newc=q[1]}
  let t=say.toLowerCase().replace(/^\s*(agende|agendar|marque|marcar|crie|criar|anote|anotar|me lembre|lembre)( me| um| uma| de| que)?\s*/,'').replace(/(depois de amanhã|amanhã|hoje|(na |no |para )?(segunda|terça|quarta|quinta|sexta|sábado|domingo)(-feira)?|dia \d+( de \w+)?|(às|as)\s+[\wà-ÿ]+(\s+(horas?|e meia|e quinze|da manhã|da tarde|da noite))*|da manhã|da tarde|da noite)/g,' ').replace(/\s+/g,' ').trim();
+ t=(' '+t.replace(/[,.!?]/g,' ')+' ').replace(/ (olá|oi|bom dia|boa tarde|boa noite) /g,' ').replace(/ (eu )?(quero|gostaria de|preciso) (fazer|marcar|criar|agendar)( um| uma)?( agendamento| compromisso)?/g,' ').replace(/ agora /g,' ').replace(/ na data de /g,' ').replace(/ vou atender ele /g,' ').replace(/ daqui a \w+ (minutos?|horas?) /g,' ').replace(/\s+/g,' ').trim().replace(/^(para|pra) /,'');
  o.title=t.charAt(0).toUpperCase()+t.slice(1);return o}
 let mr=null;
 function mic(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!R){alert('Este navegador não tem reconhecimento de voz. Use o Chrome (Android ou computador) ou digite com o botão +.');return}
- const r=new R();r.lang='pt-BR';r.interimResults=true;r.continuous=false;let txt='',err='';
- openS('<h2>🎤 Pode falar…</h2><div class="s" style="font-size:15px">Ex.: agende visita na obra do Carlos amanhã às nove</div><div id="lv" style="font-size:22px;min-height:70px;margin:12px 0"></div><div class="row"><button class="b o" onclick="stopMic()">Cancelar</button></div>');
- r.onresult=e=>{txt='';for(const x of e.results)txt+=x[0].transcript;$('#lv').textContent=txt};
+ const r=new R();r.lang='pt-BR';r.interimResults=true;r.continuous=true;let txt='',err='',st=null;
+ openS('<h2>🎤 Pode falar…</h2><div class="s" style="font-size:15px">Ex.: agende visita na obra do Carlos amanhã às nove</div><div id="lv" style="font-size:22px;min-height:70px;margin:12px 0"></div><div class="row"><button class="b g" onclick="endMic()">Pronto, terminei</button><button class="b o" onclick="stopMic()">Cancelar</button></div>');
+ r.onresult=e=>{let t='';for(const x of e.results){const q=x[0].transcript.trim();if(q.startsWith(t))t=q;else if(!t.includes(q))t+=' '+q}txt=t.trim();$('#lv').textContent=txt;clearTimeout(st);st=setTimeout(()=>{try{r.stop()}catch(_){}},3500)};
  r.onerror=e=>{err=e.error};
  r.onend=()=>{if(mr!==r)return;mr=null;if(txt.trim()){closeS();editI(null,parseV(txt))}else{closeS();alert(err==='not-allowed'||err==='service-not-allowed'?'Permita o uso do microfone no navegador.':err==='network'?'A voz precisa de internet.':'Não ouvi nada. Toque no microfone e fale de novo.')}};
  mr=r;try{r.start()}catch(e){mr=null;closeS()}}
+function endMic(){try{mr&&mr.stop()}catch(e){}}
+function addCl(n){const f=k=>$(k).value,id=uid();D.c.push({id,name:n,tel:'',end:''});save();editI(null,{type:f('#f_t'),title:f('#f_ti').trim(),date:f('#f_d'),time:f('#f_h'),alarm:$('#f_a').checked?1:0,cid:id})}
 function stopMic(){const r=mr;mr=null;try{r.abort()}catch(e){}closeS()}
 /* alarme */
 let aud,beepT,cur=null;
