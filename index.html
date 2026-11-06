@@ -84,13 +84,24 @@ function render(){const m=$('#m'),now=new Date(),td=ymd(now);
   h+=`<div class="note"><span>${dias===null?'Nenhum backup feito ainda':'Último backup há '+dias+(dias==1?' dia':' dias')}</span><button class="b" onclick="exp()">Fazer backup</button></div>`;
  }else if(view==='agenda'){const f=pend.filter(i=>i.date>=td);let last='';
   h=f.length?f.map(i=>{let x='';if(i.date!==last){last=i.date;x='<h2>'+new Date(i.date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</h2>'}return x+card(i)}).join(''):'<div class="empty">Agenda vazia.</div>';
- }else{h='<input id="q" placeholder="Buscar cliente" oninput="lc()"><div id="lst"></div>';m.innerHTML=h;lc();return}
+ }else{h='<input id="q" placeholder="Buscar por nome, telefone ou CPF" oninput="lc()"><div id="lst"></div>';m.innerHTML=h;lc();return}
  m.innerHTML=h}
-function lc(){const q=($('#q').value||'').toLowerCase();const l=D.c.filter(c=>c.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+function lc(){const q=($('#q').value||'').toLowerCase();const qd=q.replace(/\D/g,'');const l=D.c.filter(c=>c.name.toLowerCase().includes(q)||(qd.length>=3&&((c.tel||'')+(c.cpf||'')).replace(/\D/g,'').includes(qd))).sort((a,b)=>a.name.localeCompare(b.name));
  $('#lst').innerHTML=l.length?l.map(c=>`<div class="card" onclick="editC('${c.id}')"><div class="t">${esc(c.name)}</div><div class="s">${esc(c.tel||'sem telefone')}</div></div>`).join(''):'<div class="empty">Nenhum cliente. Toque em + para cadastrar.</div>'}
 function openS(h){$('#shc').innerHTML=h;$('#sh').style.display='flex'}
 function closeS(){$('#sh').style.display='none'}
-function done(id){const i=D.i.find(x=>x.id===id);i.st='ok';save();render()}
+function done(id){const i=D.i.find(x=>x.id===id);if(!i.cid||!cl(i.cid)){i.st='ok';save();render();return}
+ const t=new Date();t.setDate(t.getDate()+1);
+ openS(`<h2>${esc(cl(i.cid).name)}: o que aconteceu?</h2><div class="s">${TY[i.type]} · ${esc(i.title)}</div>
+ <label>O que foi feito</label><textarea id="r_n" rows="3"></textarea>
+ <label>Resultado final (se for concluir)</label><select id="r_r"><option>Venda fechada</option><option>Sem venda</option><option>Só visita</option><option>Outro</option></select>
+ <div class="row"><button class="b g" onclick="fin('${id}',1)">Concluir o assunto</button></div>
+ <h2>Ou continuar com este cliente</h2><label>Próximo passo</label><input id="r_t" value="${esc(i.title)}"><label>Dia</label><input type="date" id="r_d" value="${ymd(t)}"><label>Hora</label><input type="time" id="r_h" value="${i.time||'09:00'}">
+ <div class="row"><button class="b" onclick="fin('${id}',0)">Continuar (novo compromisso)</button><button class="b o" onclick="closeS()">Voltar</button></div>`)}
+function fin(id,end){const i=D.i.find(x=>x.id===id),n=$('#r_n').value.trim();
+ if(end){i.res=(n?n+' — ':'')+'Concluído: '+$('#r_r').value}else{const d=$('#r_d').value;if(!d){alert('Escolha o dia.');return}
+  i.res=(n?n+' — ':'')+'Continua em '+fd(d);D.i.push({id:uid(),st:'pend',type:i.type,title:$('#r_t').value.trim()||i.title,cid:i.cid,date:d,time:$('#r_h').value,alarm:1,fired:0})}
+ i.st='ok';save();closeS();render()}
 function snz(id){openS(`<h2>Adiar para quando?</h2><div class="row"><button class="b" onclick="mv('${id}',1)">Amanhã</button><button class="b" onclick="mv('${id}',7)">Em 1 semana</button></div><label>Outra data</label><input type="date" onchange="mvd('${id}',this.value)"><div class="row"><button class="b o" onclick="closeS()">Cancelar</button></div>`)}
 function mv(id,n){const i=D.i.find(x=>x.id===id),d=new Date();d.setDate(d.getDate()+n);i.date=ymd(d);i.fired=0;save();closeS();render()}
 function mvd(id,v){if(!v)return;const i=D.i.find(x=>x.id===id);i.date=v;i.fired=0;save();closeS();render()}
@@ -112,14 +123,14 @@ function saveI(id){const v=k=>$(k).value;if(!v('#f_d')){alert('Escolha o dia.');
  if(id){Object.assign(D.i.find(x=>x.id===id),o)}else D.i.push({id:uid(),st:'pend',...o});
  save();closeS();render()}
 function delI(id){if(confirm('Excluir este compromisso?')){D.i=D.i.filter(x=>x.id!==id);save();closeS();render()}}
-function editC(id){const c=id?cl(id):{name:'',tel:'',end:''};
+function editC(id,pre){const c=id?cl(id):Object.assign({name:'',tel:'',end:'',cpf:''},pre||{});
  const hist=id?D.i.filter(x=>x.cid===id).sort((a,b)=>when(b)-when(a)).slice(0,15):[];
- openS(`<h2>${id?'Cliente':'Novo cliente'}</h2><label>Nome</label><input id="c_n" value="${esc(c.name)}"><label>Telefone</label><input id="c_t" type="tel" value="${esc(c.tel)}"><label>Endereço</label><input id="c_e" value="${esc(c.end)}">
+ openS(`<h2>${id?'Cliente':'Novo cliente'}</h2>${pre&&pre.say?`<div class="note" style="margin:0 0 6px;display:block">Você disse: “${esc(pre.say)}”<br><b>Confira, complete o que faltou e toque em Salvar.</b></div>`:''}<label>Nome</label><input id="c_n" value="${esc(c.name)}"><label>Telefone</label><input id="c_t" type="tel" value="${esc(c.tel)}"><label>CPF (opcional)</label><input id="c_c" inputmode="numeric" placeholder="000.000.000-00" value="${esc(c.cpf||'')}"><label>Endereço</label><input id="c_e" value="${esc(c.end)}">
  <div class="row"><button class="b" onclick="saveC('${id||''}')">Salvar</button><button class="b o" onclick="closeS()">Cancelar</button></div>
  ${id?`<div class="row">${c.tel?`<a class="b g" href="tel:${esc(c.tel)}">Ligar</a><a class="b g" target="_blank" href="${wa(c.tel)}">WhatsApp</a>`:''}<button class="b r" onclick="delC('${id}')">Excluir</button></div>
- <h2>Histórico</h2>${hist.length?hist.map(x=>`<div class="s">${fd(x.date)} · ${TY[x.type]} · ${esc(x.title)} ${x.st==='ok'?'✔':''}</div>`).join(''):'<div class="s">Sem registros.</div>'}`:''}`)}
+ <h2>Histórico</h2>${hist.length?hist.map(x=>`<div class="s">${fd(x.date)} · ${TY[x.type]} · ${esc(x.title)} ${x.st==='ok'?'✔':''}${x.res?'<br>→ '+esc(x.res):''}</div>`).join(''):'<div class="s">Sem registros.</div>'}`:''}`)}
 function saveC(id){const n=$('#c_n').value.trim();if(!n){alert('Digite o nome.');return}
- const o={name:n,tel:$('#c_t').value.trim(),end:$('#c_e').value.trim()};if(id)Object.assign(cl(id),o);else D.c.push({id:uid(),...o});save();closeS();render()}
+ const cp=$('#c_c').value.trim();if(cp&&!cpfOk(cp)&&!confirm('Este CPF parece errado. Salvar mesmo assim?'))return;const o={name:n,tel:$('#c_t').value.trim(),cpf:cp?fmtCpf(cp):'',end:$('#c_e').value.trim()};if(id)Object.assign(cl(id),o);else D.c.push({id:uid(),...o});save();closeS();render()}
 function delC(id){if(confirm('Excluir cliente? Os compromissos dele continuam na agenda.')){D.c=D.c.filter(x=>x.id!==id);D.i.forEach(i=>{if(i.cid===id)i.cid=''});save();closeS();render()}}
 function exp(){const b=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),a=document.createElement('a');
  a.href=URL.createObjectURL(b);a.download='secretaria-backup-'+ymd(new Date())+'.json';document.body.appendChild(a);a.click();a.remove();D.lb=Date.now();save();render()}
@@ -134,11 +145,13 @@ function rs(k){const s=JSON.parse(localStorage.getItem('sec_snaps')||'[]');if(s[
 const NUM={um:1,uma:1,dois:2,duas:2,'três':3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,catorze:14,quatorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20};
 const nz=t=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function parseV(say){let T=nz(say).replace(/[.,!?]/g,' ');
+ if(/cadastr\w*\s+(um\s+|uma\s+)?(novo\s+|nova\s+)?cliente/.test(T))return parseC(say);
  T=T.replace(/\b(as|dia|das|para as|para o dia)\s+(vinte e \w+|\w+)/g,(m,a,b)=>{let n;const v=b.match(/^vinte e (\w+)$/);n=v&&NUM[v[1]]?20+NUM[v[1]]:NUM[b];return a+' '+(n||b)});
  const o={say,type:'tar',alarm:1};
  o.type=/respond|mensagem|retornar|whatsapp|zap/.test(T)?'msg':/pagar|pagamento|boleto|fatura/.test(T)?'pag':/visita|visitar/.test(T)?'vis':/atendimento|atender|reuniao|cliente/.test(T)?'ate':'tar';
  const n=new Date(),a=new Date();let d=null,m;
  if(/depois de amanha/.test(T))d=new Date(n.getTime()+2*864e5);else if(/amanha/.test(T))d=new Date(n.getTime()+864e5);else if(/hoje/.test(T))d=n;
+ else if(m=T.match(/\b(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*\/\s*(\d{2,4}))?/)){let y=m[3]?+m[3]:n.getFullYear();if(y<100)y+=2000;d=new Date(y,+m[2]-1,+m[1]);if(!m[3]&&d<new Date(ymd(n)+'T00:00'))d=new Date(y+1,+m[2]-1,+m[1])}
  else if(m=T.match(/dia (\d{1,2})(?: de (\w+))?/)){const ms=['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];let mo=m[2]&&ms.indexOf(m[2])>=0?ms.indexOf(m[2]):n.getMonth();d=new Date(n.getFullYear(),mo,+m[1]);if(d<new Date(ymd(n)+'T00:00'))d=new Date(n.getFullYear(),mo+(m[2]?12:1),+m[1])}
  else{const w=['domingo','segunda','terca','quarta','quinta','sexta','sabado'];const k=w.findIndex(x=>T.includes(x));if(k>=0){let diff=(k-n.getDay()+7)%7||7;d=new Date(n.getTime()+diff*864e5)}else if(/semana que vem|proxima semana/.test(T))d=new Date(n.getTime()+7*864e5)}
  o.date=ymd(d||n);
@@ -149,17 +162,30 @@ function parseV(say){let T=nz(say).replace(/[.,!?]/g,' ');
  if(h===null){if(/\bagora\b/.test(T)){const x=new Date();o.date=ymd(x);o.time=p2(x.getHours())+':'+p2(x.getMinutes())}else if(m=T.match(/daqui a (\d+|\w+) (minutos?|horas?)/)){const q=+m[1]||NUM[m[1]]||1,x=new Date(Date.now()+q*(m[2][0]==='m'?6e4:36e5));o.date=ymd(x);o.time=p2(x.getHours())+':'+p2(x.getMinutes())}}
  let best=null,bl=0;D.c.forEach(c=>{const full=nz(c.name),f=full.split(' ')[0];if(T.includes(full)&&full.length>bl){best=c;bl=full.length}else if(f.length>=3&&new RegExp('\\b'+f+'\\b').test(T)&&f.length>bl){best=c;bl=f.length}});
  if(best)o.cid=best.id;else{const q=say.match(/cliente\s+(?:chamado\s+)?([A-ZÀ-Ý][\wà-ÿ]+)/)||say.match(/\b(?:do|da|com o|com a|para o|para a|ao)\s+([A-ZÀ-Ý][\wà-ÿ]+)/);if(q)o.newc=q[1]}
- let t=say.toLowerCase().replace(/^\s*(agende|agendar|marque|marcar|crie|criar|anote|anotar|me lembre|lembre)( me| um| uma| de| que)?\s*/,'').replace(/(depois de amanhã|amanhã|hoje|(na |no |para )?(segunda|terça|quarta|quinta|sexta|sábado|domingo)(-feira)?|dia \d+( de \w+)?|(às|as)\s+[\wà-ÿ]+(\s+(horas?|e meia|e quinze|da manhã|da tarde|da noite))*|da manhã|da tarde|da noite)/g,' ').replace(/\s+/g,' ').trim();
+ let t=say.toLowerCase().replace(/^\s*(agende|agendar|marque|marcar|crie|criar|anote|anotar|me lembre|lembre)( me| um| uma| de| que)?\s*/,'').replace(/(depois de amanhã|amanhã|hoje|(na |no |para )?(segunda|terça|quarta|quinta|sexta|sábado|domingo)(-feira)?|(dia )?\d{1,2}\/\d{1,2}(\/\d+)?|dia \d+( de \w+)?|(às|as)\s+[\wà-ÿ]+(\s+(horas?|e meia|e quinze|da manhã|da tarde|da noite))*|da manhã|da tarde|da noite)/g,' ').replace(/\s+/g,' ').trim();
  t=(' '+t.replace(/[,.!?]/g,' ')+' ').replace(/ (olá|oi|bom dia|boa tarde|boa noite) /g,' ').replace(/ (eu )?(quero|gostaria de|preciso) (fazer|marcar|criar|agendar)( um| uma)?( agendamento| compromisso)?/g,' ').replace(/ agora /g,' ').replace(/ na data de /g,' ').replace(/ vou atender ele /g,' ').replace(/ daqui a \w+ (minutos?|horas?) /g,' ').replace(/\s+/g,' ').trim().replace(/^(para|pra) /,'');
  o.title=t.charAt(0).toUpperCase()+t.slice(1);return o}
+const digs=x=>String(x||'').replace(/\D/g,'');
+function cpfOk(x){x=digs(x);if(x.length!==11||/^(\d)\1+$/.test(x))return false;for(let t=9;t<11;t++){let s=0;for(let i=0;i<t;i++)s+=+x[i]*(t+1-i);if((s*10%11)%10!==+x[t])return false}return true}
+function fmtCpf(x){const d=digs(x);return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):String(x||'').trim()}
+function fmtTel(x){const d=digs(x);return d.length===11?d.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3'):d.length===10?d.replace(/(\d{2})(\d{4})(\d{4})/,'($1) $2-$3'):String(x||'').trim()}
+function parseC(say){const T=nz(say),o={isC:1,say,name:'',tel:'',cpf:'',end:''};
+ const m0=T.match(/cadastr\w*\s+(um\s+|uma\s+)?(novo\s+|nova\s+)?cliente(\s+(chamado|de nome|com nome|nome))?/),st=m0?m0.index+m0[0].length:0;
+ const ks=[['tel',/\b(telefone|celular|whatsapp|zap)\b/],['cpf',/\bcpf\b/],['end',/\b(endereco|mora|moradia)\b/]];
+ const pos=ks.map(([k,r])=>{const m=T.slice(st).match(r);return m?{k,s:st+m.index,e:st+m.index+m[0].length}:null}).filter(Boolean).sort((a,b)=>a.s-b.s);
+ const cl_=x=>x.replace(/^[\s,.:;]*(e |é |de |do |da |dele |é o )?/i,'').replace(/[\s,.;]+$/,'').trim();
+ o.name=cl_(say.slice(st,pos.length?pos[0].s:undefined)).replace(/^(o|a)\s+/i,'').replace(/(^|\s)\p{L}/gu,c=>c.toUpperCase());
+ pos.forEach((p,i)=>{const g=cl_(say.slice(p.e,i+1<pos.length?pos[i+1].s:undefined));
+  if(p.k==='tel')o.tel=digs(g).length>=8?fmtTel(g):g;else if(p.k==='cpf')o.cpf=digs(g).length===11?fmtCpf(g):digs(g);else o.end=g});
+ return o}
 let mr=null;
 function mic(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!R){alert('Este navegador não tem reconhecimento de voz. Use o Chrome (Android ou computador) ou digite com o botão +.');return}
  const r=new R();r.lang='pt-BR';r.interimResults=true;r.continuous=true;let txt='',err='',st=null;
  openS('<h2>🎤 Pode falar…</h2><div class="s" style="font-size:15px">Ex.: agende visita na obra do Carlos amanhã às nove</div><div id="lv" style="font-size:22px;min-height:70px;margin:12px 0"></div><div class="row"><button class="b g" onclick="endMic()">Pronto, terminei</button><button class="b o" onclick="stopMic()">Cancelar</button></div>');
- r.onresult=e=>{let t='';for(const x of e.results){const q=x[0].transcript.trim();if(q.startsWith(t))t=q;else if(!t.includes(q))t+=' '+q}txt=t.trim();$('#lv').textContent=txt;clearTimeout(st);st=setTimeout(()=>{try{r.stop()}catch(_){}},3500)};
+ r.onresult=e=>{let t='';for(const x of e.results){const q=x[0].transcript.trim();if(q.startsWith(t))t=q;else if(!t.includes(q))t+=' '+q}txt=t.trim();$('#lv').textContent=txt;clearTimeout(st);st=setTimeout(()=>{try{r.stop()}catch(_){}},10000)};
  r.onerror=e=>{err=e.error};
- r.onend=()=>{if(mr!==r)return;mr=null;if(txt.trim()){closeS();editI(null,parseV(txt))}else{closeS();alert(err==='not-allowed'||err==='service-not-allowed'?'Permita o uso do microfone no navegador.':err==='network'?'A voz precisa de internet.':'Não ouvi nada. Toque no microfone e fale de novo.')}};
+ r.onend=()=>{if(mr!==r)return;mr=null;if(txt.trim()){closeS();const p=parseV(txt);p.isC?editC(null,p):editI(null,p)}else{closeS();alert(err==='not-allowed'||err==='service-not-allowed'?'Permita o uso do microfone no navegador.':err==='network'?'A voz precisa de internet.':'Não ouvi nada. Toque no microfone e fale de novo.')}};
  mr=r;try{r.start()}catch(e){mr=null;closeS()}}
 function endMic(){try{mr&&mr.stop()}catch(e){}}
 function addCl(n){const f=k=>$(k).value,id=uid();D.c.push({id,name:n,tel:'',end:''});save();editI(null,{type:f('#f_t'),title:f('#f_ti').trim(),date:f('#f_d'),time:f('#f_h'),alarm:$('#f_a').checked?1:0,cid:id})}
@@ -169,10 +195,10 @@ let aud,beepT,cur=null;
 function beep(){try{aud=aud||new (window.AudioContext||window.webkitAudioContext)();const o=aud.createOscillator(),g=aud.createGain();o.type='square';o.frequency.value=880;g.gain.value=.5;o.connect(g);g.connect(aud.destination);o.start();o.stop(aud.currentTime+.35)}catch(e){}if(navigator.vibrate)navigator.vibrate([400,200,400])}
 function ring(i){cur=i;i.fired=1;save();$('#alt').textContent=TY[i.type]+' — '+i.title+(cl(i.cid)?' · '+cl(i.cid).name:'');$('#al').style.display='flex';beep();clearInterval(beepT);beepT=setInterval(beep,1200)}
 function alStop(){clearInterval(beepT);$('#al').style.display='none'}
-function alDone(){alStop();if(cur){cur.st='ok';save();render()}}
+function alDone(){alStop();if(cur)done(cur.id)}
 function alSnooze(){alStop();if(cur){const d=new Date(Date.now()+6e5);cur.date=ymd(d);cur.time=p2(d.getHours())+':'+p2(d.getMinutes());cur.fired=0;save();render()}}
 setInterval(()=>{const n=new Date();if($('#al').style.display==='flex')return;const i=D.i.find(x=>x.st!=='ok'&&x.alarm&&!x.fired&&x.time&&when(x)<=n&&n-when(x)<36e5);if(i)ring(i);render_t()},10000);
-function render_t(){if($('#sh').style.display!=='flex')render()}
+function render_t(){if($('#sh').style.display!=='flex'&&view!=='clientes')render()}
 document.addEventListener('click',()=>{try{aud=aud||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}},{once:true});
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
 /* instalação: manifesto embutido */
