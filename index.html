@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Secretária</title>
+<meta name="theme-color" content="#1F4E5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231F4E5F'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='white' font-family='sans-serif'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#ECEAE6;--card:#fff;--ink:#1d2427;--mute:#5d676b;--pet:#1F4E5F;--red:#B23A2E;--och:#C98A1B;--ok:#2f7d4f;--line:#d6d3cd}
+@media(prefers-color-scheme:dark){:root{--bg:#161b1d;--card:#222a2d;--ink:#eceae6;--mute:#9aa5a9;--pet:#3b7d94;--red:#e0675a;--och:#e0a94a;--ok:#5bb985;--line:#34403f}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{font:17px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+header{background:var(--pet);color:#fff;padding:20px 18px 24px;border-radius:0 0 24px 24px;display:flex;align-items:center;justify-content:space-between}#dt::first-letter{text-transform:uppercase}
+header h1{font-size:30px;margin:0;letter-spacing:-.5px}header small{opacity:.85;display:block;font-size:14px}
+header button{background:none;border:0;color:#fff;font-size:24px;padding:4px 8px}
+main{flex:1;overflow-y:auto;padding:12px 14px 110px}
+h2{font-size:17px;margin:16px 0 8px;font-weight:700}
+h2.red{color:var(--red);border-left:5px solid var(--red);padding-left:8px}
+.card{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:0;border-left:7px solid var(--tc,var(--line));box-shadow:0 1px 4px #0002}
+.card.od{border-left:5px solid var(--red)}
+.card .t{font-weight:700}.card .s{color:var(--mute);font-size:15px}
+.hr{color:var(--pet);font-weight:800;font-size:19px;margin-right:8px}.ty-vis{--tc:#1F7A8C}.ty-ate{--tc:#6a4c93}.ty-pag{--tc:#C98A1B}.ty-msg{--tc:#2f7d4f}.ty-tar{--tc:#6b7378}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button.b,a.b{background:var(--pet);color:#fff;border:0;border-radius:8px;padding:11px 16px;font-size:16px;text-decoration:none;display:inline-block;font-family:inherit}
+.b.o{background:none;color:var(--pet);border:2px solid var(--pet)}.b.r{background:var(--red)}.b.g{background:var(--ok)}
+.empty{color:var(--mute);text-align:center;padding:30px 10px}
+.note{background:#f7e7a8;color:#4a3c00;border-radius:10px;padding:12px 14px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;border:0;padding:8px 4px 10px;font-size:14px;line-height:1.3;color:var(--mute);font-family:inherit}
+nav button.on{color:var(--pet);font-weight:700;box-shadow:inset 0 3px 0 var(--pet)}
+.fab{position:fixed;right:106px;bottom:calc(88px + env(safe-area-inset-bottom,0px));width:50px;height:50px;border-radius:50%;background:var(--card);color:var(--pet);border:2px solid var(--pet);font-size:28px;line-height:1;box-shadow:0 2px 8px #0003}.mic{position:fixed;right:18px;bottom:calc(80px + env(safe-area-inset-bottom,0px));width:78px;height:78px;border-radius:50%;background:var(--och);color:#fff;border:0;font-size:36px;box-shadow:0 0 0 7px #c98a1b44,0 4px 14px #0005}
+#sh{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;z-index:5}
+#sh>div{background:var(--bg);width:100%;max-height:92%;overflow-y:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+label{display:block;font-size:15px;color:var(--mute);margin:10px 0 3px}
+input,select,textarea{width:100%;font:inherit;padding:11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+#al{position:fixed;inset:0;background:var(--red);color:#fff;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:14px}
+#al h1{font-size:30px;margin:0}#al .b{background:#fff;color:var(--red);font-size:20px;width:100%;max-width:320px}
+</style>
+</head>
+<body>
+<header><div><h1 id="ti">Hoje</h1><small id="dt"></small></div><button onclick="cfg()" aria-label="Configurações">⚙</button></header>
+<main id="m"></main>
+<button class="fab" id="fab" onclick="editI()" aria-label="Novo compromisso">+</button><button class="mic" onclick="mic()" aria-label="Falar">🎤</button>
+<nav><button data-v="hoje" class="on">🏠<br>Hoje</button><button data-v="agenda">📅<br>Agenda</button><button data-v="clientes">👥<br>Clientes</button></nav>
+<div id="sh" onclick="if(event.target===this)closeS()"><div id="shc"></div></div>
+<div id="al"><h1>⏰ Compromisso agora</h1><div id="alt" style="font-size:22px"></div>
+<button class="b" onclick="alDone()">Concluir</button><button class="b" onclick="alSnooze()">Adiar 10 minutos</button><button class="b" onclick="alStop()">Silenciar</button></div>
+<script>
+const $=s=>document.querySelector(s);
+const TY={pag:'Pagamento',vis:'Visita',ate:'Atendimento',msg:'Responder mensagem',tar:'Tarefa'};
+const IC={pag:'💰',vis:'🏗️',ate:'👤',msg:'💬',tar:'✅'};
+const p2=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let D;try{D=JSON.parse(localStorage.getItem('sec'))}catch(e){}
+if(!D||!D.i)D={c:[],i:[],lb:0};
+let view='hoje',lastSnap=0;
+function save(){try{localStorage.setItem('sec',JSON.stringify(D));
+ if(Date.now()-lastSnap>120000){lastSnap=Date.now();let s=JSON.parse(localStorage.getItem('sec_snaps')||'[]');s.push({t:Date.now(),d:D});localStorage.setItem('sec_snaps',JSON.stringify(s.slice(-5)))}
+}catch(e){alert('Não consegui salvar (sem espaço?). Faça um backup agora.')}}
+const when=i=>new Date(i.date+'T'+(i.time||'23:59'));
+const cl=id=>D.c.find(c=>c.id===id);
+const fd=s=>{const[a,b,c]=s.split('-');return c+'/'+b};
+function card(i,od){const c=cl(i.cid);
+ return `<div class="card ty-${i.type} ${od?'od':''}"><div onclick="editI('${i.id}')"><div class="t"><span class="hr">${i.time||'sem hora'}</span>${IC[i.type]} ${TY[i.type]}</div>
+ <div class="s">${esc(i.title)}${c?' · '+esc(c.name):''}${od?' · venceu '+fd(i.date):''}</div></div>
+ ${i.st==='ok'?'':`<div class="row"><button class="b g" onclick="done('${i.id}')">Concluir</button><button class="b o" onclick="snz('${i.id}')">Adiar</button></div>`}</div>`}
+function render(){const m=$('#m'),now=new Date(),td=ymd(now);
+ $('#dt').textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+ $('#ti').textContent={hoje:'Hoje',agenda:'Agenda',clientes:'Clientes'}[view];
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+ $('#fab').textContent=view==='clientes'?'＋':'+';
+ const pend=D.i.filter(i=>i.st!=='ok').sort((a,b)=>when(a)-when(b));let h='';
+ if(view==='hoje'){const od=pend.filter(i=>when(i)<now&&i.date<=td&&!(i.date===td&&(i.time||'23:59')>=p2(now.getHours())+':'+p2(now.getMinutes())));
+  const hj=pend.filter(i=>i.date===td&&!od.includes(i));
+  if(od.length)h+='<h2 class="red">Atrasados ('+od.length+')</h2>'+od.map(i=>card(i,1)).join('');
+  h+='<h2>Hoje</h2>'+(hj.length?hj.map(i=>card(i)).join(''):'<div class="empty">Nada marcado para hoje.<br>Toque em + para criar.</div>');
+  const dias=D.lb?Math.floor((Date.now()-D.lb)/864e5):null;
+  h+=`<div class="note"><span>${dias===null?'Nenhum backup feito ainda':'Último backup há '+dias+(dias==1?' dia':' dias')}</span><button class="b" onclick="exp()">Fazer backup</button></div>`;
+ }else if(view==='agenda'){const f=pend.filter(i=>i.date>=td);let last='';
+  h=f.length?f.map(i=>{let x='';if(i.date!==last){last=i.date;x='<h2>'+new Date(i.date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</h2>'}return x+card(i)}).join(''):'<div class="empty">Agenda vazia.</div>';
+ }else{h='<input id="q" placeholder="Buscar cliente" oninput="lc()"><div id="lst"></div>';m.innerHTML=h;lc();return}
+ m.innerHTML=h}
+function lc(){const q=($('#q').value||'').toLowerCase();const l=D.c.filter(c=>c.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+ $('#lst').innerHTML=l.length?l.map(c=>`<div class="card" onclick="editC('${c.id}')"><div class="t">${esc(c.name)}</div><div class="s">${esc(c.tel||'sem telefone')}</div></div>`).join(''):'<div class="empty">Nenhum cliente. Toque em + para cadastrar.</div>'}
+function openS(h){$('#shc').innerHTML=h;$('#sh').style.display='flex'}
+function closeS(){$('#sh').style.display='none'}
+function done(id){const i=D.i.find(x=>x.id===id);i.st='ok';save();render()}
+function snz(id){openS(`<h2>Adiar para quando?</h2><div class="row"><button class="b" onclick="mv('${id}',1)">Amanhã</button><button class="b" onclick="mv('${id}',7)">Em 1 semana</button></div><label>Outra data</label><input type="date" onchange="mvd('${id}',this.value)"><div class="row"><button class="b o" onclick="closeS()">Cancelar</button></div>`)}
+function mv(id,n){const i=D.i.find(x=>x.id===id),d=new Date();d.setDate(d.getDate()+n);i.date=ymd(d);i.fired=0;save();closeS();render()}
+function mvd(id,v){if(!v)return;const i=D.i.find(x=>x.id===id);i.date=v;i.fired=0;save();closeS();render()}
+function wa(tel,txt){let n=String(tel||'').replace(/\D/g,'');if(n.length<=11)n='55'+n;return 'https://wa.me/'+n+(txt?'?text='+encodeURIComponent(txt):'')}
+function gcal(i){const s=i.date.replace(/-/g,'')+'T'+(i.time||'09:00').replace(':','')+'00',e=new Date(when(i).getTime()+36e5),f=ymd(e).replace(/-/g,'')+'T'+p2(e.getHours())+p2(e.getMinutes())+'00';
+ return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(TY[i.type]+': '+i.title)+'&dates='+s+'/'+f}
+function editI(id,pre){if(view==='clientes'&&!id&&!pre)return editC();
+ const i=id?D.i.find(x=>x.id===id):Object.assign({type:'vis',title:'',date:ymd(new Date()),time:'09:00',cid:'',alarm:1},pre||{});const c=cl(i.cid);
+ openS(`<h2>${id?'Editar':pre?'Confirmar':'Novo'} compromisso</h2>${pre&&pre.say?`<div class="note" style="margin:0 0 6px;display:block">Você disse: “${esc(pre.say)}”<br><b>Confira e toque em Salvar.</b></div>`:''}
+ <label>Tipo</label><select id="f_t">${Object.entries(TY).map(([k,v])=>`<option value="${k}" ${i.type===k?'selected':''}>${v}</option>`).join('')}</select>
+ <label>Descrição</label><input id="f_ti" value="${esc(i.title)}" placeholder="Ex.: visita na obra">
+ <label>Cliente</label><select id="f_c"><option value="">— nenhum —</option>${D.c.map(c=>`<option value="${c.id}" ${i.cid===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+ <label>Dia</label><input type="date" id="f_d" value="${i.date}"><label>Hora</label><input type="time" id="f_h" value="${i.time||''}">
+ <label><input type="checkbox" id="f_a" style="width:auto" ${i.alarm?'checked':''}> Alarme alto</label>
+ <div class="row"><button class="b" onclick="saveI('${id||''}')">Salvar</button><button class="b o" onclick="closeS()">Cancelar</button></div>
+ ${id?`<div class="row"><a class="b o" target="_blank" href="${gcal(i)}">Agenda do Google</a>${c&&c.tel?`<a class="b o" target="_blank" href="${wa(c.tel,i.type==='msg'?'Olá, tudo bem? Estou retornando sua mensagem.':'')}">WhatsApp</a>`:''}<button class="b r" onclick="delI('${id}')">Excluir</button></div>`:''}`)}
+function saveI(id){const v=k=>$(k).value;if(!v('#f_d')){alert('Escolha o dia.');return}
+ const o={type:v('#f_t'),title:v('#f_ti').trim(),cid:v('#f_c'),date:v('#f_d'),time:v('#f_h'),alarm:$('#f_a').checked?1:0,fired:0};
+ if(id){Object.assign(D.i.find(x=>x.id===id),o)}else D.i.push({id:uid(),st:'pend',...o});
+ save();closeS();render()}
+function delI(id){if(confirm('Excluir este compromisso?')){D.i=D.i.filter(x=>x.id!==id);save();closeS();render()}}
+function editC(id){const c=id?cl(id):{name:'',tel:'',end:''};
+ const hist=id?D.i.filter(x=>x.cid===id).sort((a,b)=>when(b)-when(a)).slice(0,15):[];
+ openS(`<h2>${id?'Cliente':'Novo cliente'}</h2><label>Nome</label><input id="c_n" value="${esc(c.name)}"><label>Telefone</label><input id="c_t" type="tel" value="${esc(c.tel)}"><label>Endereço</label><input id="c_e" value="${esc(c.end)}">
+ <div class="row"><button class="b" onclick="saveC('${id||''}')">Salvar</button><button class="b o" onclick="closeS()">Cancelar</button></div>
+ ${id?`<div class="row">${c.tel?`<a class="b g" href="tel:${esc(c.tel)}">Ligar</a><a class="b g" target="_blank" href="${wa(c.tel)}">WhatsApp</a>`:''}<button class="b r" onclick="delC('${id}')">Excluir</button></div>
+ <h2>Histórico</h2>${hist.length?hist.map(x=>`<div class="s">${fd(x.date)} · ${TY[x.type]} · ${esc(x.title)} ${x.st==='ok'?'✔':''}</div>`).join(''):'<div class="s">Sem registros.</div>'}`:''}`)}
+function saveC(id){const n=$('#c_n').value.trim();if(!n){alert('Digite o nome.');return}
+ const o={name:n,tel:$('#c_t').value.trim(),end:$('#c_e').value.trim()};if(id)Object.assign(cl(id),o);else D.c.push({id:uid(),...o});save();closeS();render()}
+function delC(id){if(confirm('Excluir cliente? Os compromissos dele continuam na agenda.')){D.c=D.c.filter(x=>x.id!==id);D.i.forEach(i=>{if(i.cid===id)i.cid=''});save();closeS();render()}}
+function exp(){const b=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(b);a.download='secretaria-backup-'+ymd(new Date())+'.json';document.body.appendChild(a);a.click();a.remove();D.lb=Date.now();save();render()}
+function imp(f){const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.i||!x.c)throw 0;if(confirm('Substituir os dados atuais pelo backup?')){D=x;save();closeS();render()}}catch(e){alert('Arquivo inválido.')}};r.readAsText(f)}
+function cfg(){const s=JSON.parse(localStorage.getItem('sec_snaps')||'[]');
+ openS(`<h2>Backup</h2><div class="row"><button class="b" onclick="exp()">Baixar backup agora</button></div><label>Restaurar de um arquivo</label><input type="file" accept=".json" onchange="imp(this.files[0])">
+ <label>Cópias automáticas no app (últimas 5)</label>${s.length?s.slice().reverse().map((x,k)=>`<div class="card"><span class="s">${new Date(x.t).toLocaleString('pt-BR')}</span><div class="row"><button class="b o" onclick="rs(${s.length-1-k})">Restaurar</button></div></div>`).join(''):'<div class="s">Ainda não há cópias.</div>'}
+ <div class="s" style="margin-top:10px">O backup é texto puro, com dados de clientes. Guarde em local seguro. As cópias automáticas somem se o navegador limpar os dados do app.</div><div class="row"><button class="b o" onclick="closeS()">Fechar</button></div>`)}
+function rs(k){const s=JSON.parse(localStorage.getItem('sec_snaps')||'[]');if(s[k]&&confirm('Restaurar esta cópia?')){D=s[k].d;save();closeS();render()}}
+
+/* voz */
+const NUM={um:1,uma:1,dois:2,duas:2,'três':3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,catorze:14,quatorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20};
+const nz=t=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function parseV(say){let T=nz(say).replace(/[.,!?]/g,' ');
+ T=T.replace(/\b(as|dia|das|para as|para o dia)\s+(vinte e \w+|\w+)/g,(m,a,b)=>{let n;const v=b.match(/^vinte e (\w+)$/);n=v&&NUM[v[1]]?20+NUM[v[1]]:NUM[b];return a+' '+(n||b)});
+ const o={say,type:'tar',alarm:1};
+ o.type=/respond|mensagem|retornar|whatsapp|zap/.test(T)?'msg':/pagar|pagamento|boleto|fatura/.test(T)?'pag':/visita|visitar/.test(T)?'vis':/atendimento|atender|reuniao|cliente/.test(T)?'ate':'tar';
+ const n=new Date(),a=new Date();let d=null,m;
+ if(/depois de amanha/.test(T))d=new Date(n.getTime()+2*864e5);else if(/amanha/.test(T))d=new Date(n.getTime()+864e5);else if(/hoje/.test(T))d=n;
+ else if(m=T.match(/dia (\d{1,2})(?: de (\w+))?/)){const ms=['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];let mo=m[2]&&ms.indexOf(m[2])>=0?ms.indexOf(m[2]):n.getMonth();d=new Date(n.getFullYear(),mo,+m[1]);if(d<new Date(ymd(n)+'T00:00'))d=new Date(n.getFullYear(),mo+(m[2]?12:1),+m[1])}
+ else{const w=['domingo','segunda','terca','quarta','quinta','sexta','sabado'];const k=w.findIndex(x=>T.includes(x));if(k>=0){let diff=(k-n.getDay()+7)%7||7;d=new Date(n.getTime()+diff*864e5)}else if(/semana que vem|proxima semana/.test(T))d=new Date(n.getTime()+7*864e5)}
+ o.date=ymd(d||n);
+ let h=null,mi=0;m=T.match(/\bas\s+(\d{1,2})(?:\s*(?:h|horas?|:)\s*(\d{2})?)?(\s+e\s+meia|\s+e\s+quinze)?/)||T.match(/\b(\d{1,2})\s*(?:h|horas?|:)\s*(\d{2})?(\s+e\s+meia|\s+e\s+quinze)?/);
+ if(m){h=+m[1];mi=m[2]?+m[2]:m[3]?(m[3].includes('meia')?30:15):0}else if(/meio.?dia/.test(T)){h=12}
+ if(h!==null){if(/tarde|noite/.test(T)&&h<12)h+=12;if(h>23)h=null}
+ o.time=h===null?'':p2(h)+':'+p2(mi);
+ let best=null,bl=0;D.c.forEach(c=>{const full=nz(c.name),f=full.split(' ')[0];if(T.includes(full)&&full.length>bl){best=c;bl=full.length}else if(f.length>=3&&new RegExp('\\b'+f+'\\b').test(T)&&f.length>bl){best=c;bl=f.length}});
+ if(best)o.cid=best.id;
+ let t=say.toLowerCase().replace(/^\s*(agende|agendar|marque|marcar|crie|criar|anote|anotar|me lembre|lembre)( me| um| uma| de| que)?\s*/,'').replace(/(depois de amanhã|amanhã|hoje|(na |no |para )?(segunda|terça|quarta|quinta|sexta|sábado|domingo)(-feira)?|dia \d+( de \w+)?|(às|as)\s+[\wà-ÿ]+(\s+(horas?|e meia|e quinze|da manhã|da tarde|da noite))*|da manhã|da tarde|da noite)/g,' ').replace(/\s+/g,' ').trim();
+ o.title=t.charAt(0).toUpperCase()+t.slice(1);return o}
+let mr=null;
+function mic(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!R){alert('Este navegador não tem reconhecimento de voz. Use o Chrome (Android ou computador) ou digite com o botão +.');return}
+ const r=new R();r.lang='pt-BR';r.interimResults=true;r.continuous=false;let txt='',err='';
+ openS('<h2>🎤 Pode falar…</h2><div class="s" style="font-size:15px">Ex.: agende visita na obra do Carlos amanhã às nove</div><div id="lv" style="font-size:22px;min-height:70px;margin:12px 0"></div><div class="row"><button class="b o" onclick="stopMic()">Cancelar</button></div>');
+ r.onresult=e=>{txt='';for(const x of e.results)txt+=x[0].transcript;$('#lv').textContent=txt};
+ r.onerror=e=>{err=e.error};
+ r.onend=()=>{if(mr!==r)return;mr=null;if(txt.trim()){closeS();editI(null,parseV(txt))}else{closeS();alert(err==='not-allowed'||err==='service-not-allowed'?'Permita o uso do microfone no navegador.':err==='network'?'A voz precisa de internet.':'Não ouvi nada. Toque no microfone e fale de novo.')}};
+ mr=r;try{r.start()}catch(e){mr=null;closeS()}}
+function stopMic(){const r=mr;mr=null;try{r.abort()}catch(e){}closeS()}
+/* alarme */
+let aud,beepT,cur=null;
+function beep(){try{aud=aud||new (window.AudioContext||window.webkitAudioContext)();const o=aud.createOscillator(),g=aud.createGain();o.type='square';o.frequency.value=880;g.gain.value=.5;o.connect(g);g.connect(aud.destination);o.start();o.stop(aud.currentTime+.35)}catch(e){}if(navigator.vibrate)navigator.vibrate([400,200,400])}
+function ring(i){cur=i;i.fired=1;save();$('#alt').textContent=TY[i.type]+' — '+i.title+(cl(i.cid)?' · '+cl(i.cid).name:'');$('#al').style.display='flex';beep();clearInterval(beepT);beepT=setInterval(beep,1200)}
+function alStop(){clearInterval(beepT);$('#al').style.display='none'}
+function alDone(){alStop();if(cur){cur.st='ok';save();render()}}
+function alSnooze(){alStop();if(cur){const d=new Date(Date.now()+6e5);cur.date=ymd(d);cur.time=p2(d.getHours())+':'+p2(d.getMinutes());cur.fired=0;save();render()}}
+setInterval(()=>{const n=new Date();if($('#al').style.display==='flex')return;const i=D.i.find(x=>x.st!=='ok'&&x.alarm&&!x.fired&&x.time&&when(x)<=n&&n-when(x)<36e5);if(i)ring(i);render_t()},10000);
+function render_t(){if($('#sh').style.display!=='flex')render()}
+document.addEventListener('click',()=>{try{aud=aud||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}},{once:true});
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
+/* instalação: manifesto embutido */
+try{const mf={name:'Secretária de bolso',short_name:'Secretária',start_url:'.',display:'standalone',background_color:'#ECEAE6',theme_color:'#1F4E5F',icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231F4E5F'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='white' font-family='sans-serif'%3ES%3C/text%3E%3C/svg%3E",sizes:'512x512',type:'image/svg+xml'}]};
+ const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/manifest+json'}));document.head.appendChild(l)}catch(e){}
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+render();
+if(D.lb&&Date.now()-D.lb>864e5||!D.lb&&D.i.length)setTimeout(()=>{if(confirm('Fazer o backup de hoje?'))exp()},800);
+</script>
+</body>
+</html>
