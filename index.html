@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Secretária</title>
+<title>Secretária de bolso</title>
 <meta name="theme-color" content="#1F4E5F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231F4E5F'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='white' font-family='sans-serif'%3ES%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#ECEAE6;--card:#fff;--ink:#1d2427;--mute:#5d676b;--pet:#1F4E5F;--red:#B23A2E;--och:#C98A1B;--ok:#2f7d4f;--line:#d6d3cd}
-@media(prefers-color-scheme:dark){:root{--bg:#161b1d;--card:#222a2d;--ink:#eceae6;--mute:#9aa5a9;--pet:#3b7d94;--red:#e0675a;--och:#e0a94a;--ok:#5bb985;--line:#34403f}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
 body{font:17px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
@@ -52,12 +51,21 @@ nav button.on{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}
 h2{color:var(--gold)}h2.red{color:var(--red)}
 .mic{background:linear-gradient(135deg,#e0b85a,#b9852c);color:#1a1405}
 .fab{color:var(--gold);border-color:var(--gold)}
+html{background:linear-gradient(rgba(8,14,28,.70),rgba(8,14,28,.84)),url(fundo.jpg) center top/cover no-repeat #0e1626}
+body{background:transparent;max-width:560px;margin:0 auto;box-shadow:0 0 40px #0008}
+nav{max-width:560px;left:50%;right:auto;width:100%;transform:translateX(-50%)}
+#sh>div{max-width:560px;margin:0 auto}
+.mic{width:auto;height:52px;border-radius:26px;padding:0 20px;font-size:18px;font-weight:700;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));box-shadow:0 0 0 4px #e0b85a44,0 3px 10px #0006}
+.fab{width:auto;height:44px;border-radius:22px;padding:0 18px;font-size:17px;font-weight:700;right:14px;bottom:calc(146px + env(safe-area-inset-bottom,0px))}
+@media(min-width:600px){.mic,.fab{right:calc(50% - 266px)}}
+.resumo{background:rgba(224,184,90,.14);border:1px solid var(--gold);border-radius:14px;padding:12px 14px;margin:2px 0 6px;font-weight:700}
+#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#e0b85a;color:#1a1405;padding:10px 18px;border-radius:20px;font-weight:700;z-index:20;box-shadow:0 4px 14px #0007;transition:opacity .3s;opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
 <header><div><h1 id="ti">Hoje</h1><small id="dt"></small></div><div><button onclick="ajuda()" aria-label="Ajuda">❓</button><button onclick="cfg()" aria-label="Configurações">⚙</button></div></header>
 <main id="m"></main>
-<button class="fab" id="fab" onclick="editI()" aria-label="Novo compromisso">+</button><button class="mic" onclick="mic()" aria-label="Falar">🎤</button>
+<button class="fab" id="fab" onclick="editI()" aria-label="Novo compromisso">＋ Novo</button><button class="mic" onclick="mic()" aria-label="Falar">🎤 Falar</button>
 <nav><button data-v="hoje" class="on">🏠<br>Hoje</button><button data-v="agenda">📅<br>Agenda</button><button data-v="contas">💰<br>Contas</button><button data-v="clientes">👥<br>Clientes</button></nav>
 <div id="sh" onclick="if(event.target===this)closeS()"><div id="shc"></div></div>
 <div id="al"><h1>⏰ Compromisso agora</h1><div id="alt" style="font-size:22px"></div>
@@ -91,6 +99,7 @@ function render(){const m=$('#m'),now=new Date(),td=ymd(now);D.p=D.p||[];
  const pend=D.i.filter(i=>i.st!=='ok').sort((a,b)=>when(a)-when(b));let h='';
  if(view==='hoje'){const od=pend.filter(i=>when(i)<now&&i.date<=td&&!(i.date===td&&(i.time||'23:59')>=p2(now.getHours())+':'+p2(now.getMinutes())));
   const hj=pend.filter(i=>i.date===td&&!od.includes(i));
+  {const nb=D.p.filter(b=>b.st!=='ok'&&b.date<=td).length,pl=(n,a,b)=>n+' '+(n===1?a:b);h+='<div class="resumo">📌 '+pl(hj.length,'compromisso','compromissos')+' hoje · '+pl(nb,'conta vencendo','contas vencendo')+(od.length?' · '+pl(od.length,'atrasado','atrasados'):'')+'</div>'}
   if(od.length)h+='<h2 class="red">Atrasados ('+od.length+')</h2>'+od.map(i=>card(i,1)).join('');
   h+='<h2>Hoje</h2>'+(hj.length?hj.map(i=>card(i)).join(''):'<div class="empty">Nada marcado para hoje.<br>Toque em + para criar.</div>');
   const cp=D.p.filter(b=>b.st!=='ok'&&b.date<=td).sort((a,b)=>a.date.localeCompare(b.date));if(cp.length)h+='<h2 class="red">Contas para pagar ('+cp.length+')</h2>'+cp.map(cardP).join('');
@@ -115,7 +124,7 @@ function done(id){const i=D.i.find(x=>x.id===id);if(!i.cid||!cl(i.cid)){i.st='ok
 function fin(id,end){const i=D.i.find(x=>x.id===id),n=$('#r_n').value.trim();
  if(end){i.res=(n?n+' — ':'')+'Concluído: '+$('#r_r').value}else{const d=$('#r_d').value;if(!d){alert('Escolha o dia.');return}
   i.res=(n?n+' — ':'')+'Continua em '+fd(d);D.i.push({id:uid(),st:'pend',type:i.type,title:$('#r_t').value.trim()||i.title,cid:i.cid,date:d,time:$('#r_h').value,alarm:1,fired:0})}
- i.st='ok';save();closeS();render()}
+ i.st='ok';save();closeS();render();toast('Registrado ✔')}
 function snz(id){openS(`<h2>Adiar para quando?</h2><div class="row"><button class="b" onclick="mv('${id}',1)">Amanhã</button><button class="b" onclick="mv('${id}',7)">Em 1 semana</button></div><label>Outra data</label><input type="date" onchange="mvd('${id}',this.value)"><div class="row"><button class="b o" onclick="closeS()">Cancelar</button></div>`)}
 function mv(id,n){const i=D.i.find(x=>x.id===id),d=new Date();d.setDate(d.getDate()+n);i.date=ymd(d);i.fired=0;save();closeS();render()}
 function mvd(id,v){if(!v)return;const i=D.i.find(x=>x.id===id);i.date=v;i.fired=0;save();closeS();render()}
@@ -132,10 +141,10 @@ function editI(id,pre){if(view==='clientes'&&!id&&!pre)return editC();if(view===
  <label><input type="checkbox" id="f_a" style="width:auto" ${i.alarm?'checked':''}> Alarme alto</label>
  <div class="row"><button class="b" onclick="saveI('${id||''}')">Salvar</button><button class="b o" onclick="closeS()">Cancelar</button></div>
  ${id?`<div class="row"><a class="b o" target="_blank" href="${gcal(i)}">Agenda do Google</a>${c&&c.tel?`<a class="b o" target="_blank" href="${wa(c.tel,i.type==='msg'?'Olá, tudo bem? Estou retornando sua mensagem.':'')}">WhatsApp</a>`:''}<button class="b r" onclick="delI('${id}')">Excluir</button></div>`:''}`)}
-function saveI(id){const v=k=>$(k).value;if(!v('#f_d')){alert('Escolha o dia.');return}
+function saveI(id){const v=k=>$(k).value;if(!v('#f_d')){alert('Escolha o dia.');return}if(!v('#f_ti').trim()){alert('Escreva o que é o compromisso.');return}
  const o={type:v('#f_t'),title:v('#f_ti').trim(),cid:v('#f_c'),date:v('#f_d'),time:v('#f_h'),alarm:$('#f_a').checked?1:0,fired:0};
  if(id){Object.assign(D.i.find(x=>x.id===id),o)}else D.i.push({id:uid(),st:'pend',...o});
- save();closeS();render()}
+ save();closeS();render();toast('Salvo ✔')}
 function delI(id){if(confirm('Excluir este compromisso?')){D.i=D.i.filter(x=>x.id!==id);save();closeS();render()}}
 function editC(id,pre){const c=id?cl(id):Object.assign({name:'',tel:'',end:'',cpf:''},pre||{});
  const hist=id?D.i.filter(x=>x.cid===id).sort((a,b)=>when(b)-when(a)).slice(0,15):[];
@@ -144,11 +153,20 @@ function editC(id,pre){const c=id?cl(id):Object.assign({name:'',tel:'',end:'',cp
  ${id?`<div class="row">${c.tel?`<a class="b g" href="tel:${esc(c.tel)}">Ligar</a><a class="b g" target="_blank" href="${wa(c.tel)}">WhatsApp</a>`:''}<button class="b r" onclick="delC('${id}')">Excluir</button></div>
  <h2>Histórico</h2>${hist.length?hist.map(x=>`<div class="s">${fd(x.date)} · ${TY[x.type]} · ${esc(x.title)} ${x.st==='ok'?'✔':''}${x.res?'<br>→ '+esc(x.res):''}</div>`).join(''):'<div class="s">Sem registros.</div>'}`:''}`)}
 function saveC(id){const n=$('#c_n').value.trim();if(!n){alert('Digite o nome.');return}
- const cp=$('#c_c').value.trim();if(cp&&!cpfOk(cp)&&!confirm('Este CPF parece errado. Salvar mesmo assim?'))return;const o={name:n,tel:$('#c_t').value.trim(),cpf:cp?fmtCpf(cp):'',end:$('#c_e').value.trim()};if(id)Object.assign(cl(id),o);else D.c.push({id:uid(),...o});save();closeS();render()}
+ const cp=$('#c_c').value.trim();if(cp&&!cpfOk(cp)&&!confirm('Este CPF parece errado. Salvar mesmo assim?'))return;const o={name:n,tel:$('#c_t').value.trim(),cpf:cp?fmtCpf(cp):'',end:$('#c_e').value.trim()};if(id)Object.assign(cl(id),o);else D.c.push({id:uid(),...o});save();closeS();render();toast('Cliente salvo ✔')}
 function delC(id){if(confirm('Excluir cliente? Os compromissos dele continuam na agenda.')){D.c=D.c.filter(x=>x.id!==id);D.i.forEach(i=>{if(i.cid===id)i.cid=''});save();closeS();render()}}
 function exp(){const b=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),a=document.createElement('a');
  a.href=URL.createObjectURL(b);a.download='secretaria-backup-'+ymd(new Date())+'.json';document.body.appendChild(a);a.click();a.remove();D.lb=Date.now();save();render()}
-function imp(f){const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.i||!x.c)throw 0;if(confirm('Substituir os dados atuais pelo backup?')){D=x;save();closeS();render()}}catch(e){alert('Arquivo inválido.')}};r.readAsText(f)}
+const okId=x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,40}$/.test(x);
+function cleanDB(x){if(!x||!Array.isArray(x.i)||!Array.isArray(x.c))throw 0;
+ const S=(v,n=300)=>typeof v==='string'?v.slice(0,n):'',idd=v=>okId(v)?v:uid(),dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'');
+ const c=x.c.filter(o=>o&&typeof o==='object').map(o=>({...o,id:idd(o.id),name:S(o.name,120),tel:S(o.tel,40),cpf:S(o.cpf,20),end:S(o.end,300)})),ids=new Set(c.map(o=>o.id));
+ const i=x.i.filter(o=>o&&dt(o.date)).map(o=>({...o,id:idd(o.id),st:o.st==='ok'?'ok':'pend',type:TY[o.type]?o.type:'tar',title:S(o.title),cid:ids.has(o.cid)?o.cid:'',date:o.date,time:/^\d{2}:\d{2}$/.test(o.time||'')?o.time:'',res:S(o.res,500)}));
+ const p=(Array.isArray(x.p)?x.p:[]).filter(o=>o&&dt(o.date)).map(o=>({...o,id:idd(o.id),st:o.st==='ok'?'ok':'pend',desc:S(o.desc,200),loc:S(o.loc,200),val:Number.isFinite(+o.val)?+o.val:0,av:[0,1,2,3].includes(+o.av)?+o.av:1,g:okId(o.g)?o.g:undefined}));
+ return{...x,c,i,p}}
+function imp(f){const r=new FileReader();r.onload=()=>{try{const x=cleanDB(JSON.parse(r.result));if(confirm('Substituir os dados atuais por um backup com '+x.c.length+' clientes, '+x.i.length+' compromissos e '+x.p.length+' contas?')){D=x;save();closeS();render();toast('Backup restaurado ✔')}}catch(e){alert('Arquivo inválido.')}};r.readAsText(f)}
+
+function toast(t){let e=$('#toast');if(!e){e=document.createElement('div');e.id='toast';document.body.appendChild(e)}e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,1800)}
 function ajuda(){const F=(t,x)=>`<div class="card"><div class="t">${t}</div><div class="s">${x}</div></div>`;
  openS(`<h2>❓ Como falar com o app</h2><div class="s">Toque no microfone, fale a frase e toque em <b>Pronto, terminei</b>. O app preenche, você <b>confere</b> e salva. Ele nunca salva sozinho.</div>
  <h2>👤 Cadastrar cliente</h2>${F('Diga “cadastrar cliente”','“Cadastrar cliente <b>Maria Souza</b>, telefone <b>89 99999 1234</b>, CPF <b>000 000 000 00</b>, endereço <b>sítio Lopes 2</b>”<br>Diga as palavras <b>telefone</b>, <b>CPF</b> e <b>endereço</b>. O que você não falar fica em branco para completar depois.')}
@@ -220,18 +238,18 @@ function editP(id,pre){const b=id?D.p.find(x=>x.id===id):Object.assign({desc:'',
  <label>Avisar antes do vencimento</label><select id="p_a">${[0,1,2,3].map(n=>`<option value="${n}" ${+b.av===n?'selected':''}>${n?n+(n>1?' dias':' dia')+' antes e no dia':'Só no dia'}</option>`).join('')}</select>
  <div class="row"><button class="b" onclick="saveP('${id||''}')">Salvar</button><button class="b o" onclick="closeS()">Cancelar</button></div>
  ${id&&b.st!=='ok'?`<div class="row"><button class="b g" onclick="payBill('${id}')">Paguei</button><button class="b o" onclick="bsnz('${id}')">Remarcar</button><button class="b r" onclick="delP('${id}')">Excluir</button></div>`:id?`<div class="row"><button class="b r" onclick="delP('${id}')">Excluir</button></div>`:''}`)}
-function saveP(id){const v=k=>$(k).value,d=v('#p_d');if(!d||!v('#p_t').trim()){alert('Preencha a descrição e o vencimento.');return}
+function saveP(id){const v=k=>$(k).value,d=v('#p_d');if(!d||!v('#p_t').trim()){alert('Preencha a descrição e o vencimento.');return}if(!num(v('#p_v'))&&!confirm('O valor está zerado. Salvar mesmo assim?'))return;
  const av=+v('#p_a'),base={desc:v('#p_t').trim(),val:num(v('#p_v')),loc:v('#p_l').trim(),av};
  if(id){const b=D.p.find(x=>x.id===id);Object.assign(b,base,{date:d,dia:+d.slice(8)});fl(b)}
  else{const k=v('#p_k'),n=k==='par'?Math.max(2,+v('#p_n')||2):1,[y,m,dd]=d.split('-').map(Number),g=uid();
   for(let j=0;j<n;j++){const q={id:uid(),st:'pend',...base,date:j?mdate(y,m-1+j,dd):d,dia:dd};if(k==='men')q.rec=1;if(n>1){q.g=g;q.k=j+1;q.n=n;q.desc=base.desc+' '+(j+1)+'/'+n}fl(q);D.p.push(q)}}
- save();closeS();render()}
+ save();closeS();render();toast('Conta salva ✔')}
 function payBill(id){const b=D.p.find(x=>x.id===id);if(!b)return;b.st='ok';b.paid=Date.now();
  if(b.rec){const[y,m]=b.date.split('-').map(Number),q=Object.assign({},b,{id:uid(),st:'pend',paid:0,date:mdate(y,m,b.dia||+b.date.slice(8))});fl(q);D.p.push(q)}
- save();closeS();render()}
+ save();closeS();render();toast('Conta paga ✔')}
 function bsnz(id){openS(`<h2>Pagar quando?</h2><div class="row"><button class="b" onclick="bmv('${id}',1)">Amanhã</button><button class="b" onclick="bmv('${id}',2)">Em 2 dias</button><button class="b" onclick="bmv('${id}',3)">Em 3 dias</button></div><label>Outra data</label><input type="date" onchange="bmvd('${id}',this.value)"><div class="row"><button class="b o" onclick="closeS()">Cancelar</button></div>`)}
 function bmv(id,n){const d=new Date();d.setDate(d.getDate()+n);bmvd(id,ymd(d))}
-function bmvd(id,v){if(!v)return;const b=D.p.find(x=>x.id===id);b.date=v;fl(b);save();closeS();render()}
+function bmvd(id,v){if(!v)return;const b=D.p.find(x=>x.id===id);b.date=v;fl(b);save();closeS();render();toast('Remarcado ✔')}
 function delP(id){if(confirm('Excluir esta conta?')){D.p=D.p.filter(x=>x.id!==id);save();closeS();render()}}
 function ringP(b,e){cur={pv:1,id:b.id};if(e)b.a1=1;else b.a0=1;save();lab('Já paguei','Remarcar pagamento','Ok, avisar no dia');
  $('#al h1').textContent=e?'💰 Conta a vencer':'💰 Conta vence agora';$('#alt').textContent=(e?'Vence '+fd(b.date)+': ':'Vence hoje: ')+b.desc+' · '+brl(b.val)+(b.loc?' · '+b.loc:'');
