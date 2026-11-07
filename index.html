@@ -55,7 +55,7 @@ h2{color:var(--gold)}h2.red{color:var(--red)}
 </style>
 </head>
 <body>
-<header><div><h1 id="ti">Hoje</h1><small id="dt"></small></div><button onclick="cfg()" aria-label="Configurações">⚙</button></header>
+<header><div><h1 id="ti">Hoje</h1><small id="dt"></small></div><div><button onclick="ajuda()" aria-label="Ajuda">❓</button><button onclick="cfg()" aria-label="Configurações">⚙</button></div></header>
 <main id="m"></main>
 <button class="fab" id="fab" onclick="editI()" aria-label="Novo compromisso">+</button><button class="mic" onclick="mic()" aria-label="Falar">🎤</button>
 <nav><button data-v="hoje" class="on">🏠<br>Hoje</button><button data-v="agenda">📅<br>Agenda</button><button data-v="contas">💰<br>Contas</button><button data-v="clientes">👥<br>Clientes</button></nav>
@@ -149,6 +149,14 @@ function delC(id){if(confirm('Excluir cliente? Os compromissos dele continuam na
 function exp(){const b=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),a=document.createElement('a');
  a.href=URL.createObjectURL(b);a.download='secretaria-backup-'+ymd(new Date())+'.json';document.body.appendChild(a);a.click();a.remove();D.lb=Date.now();save();render()}
 function imp(f){const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.i||!x.c)throw 0;if(confirm('Substituir os dados atuais pelo backup?')){D=x;save();closeS();render()}}catch(e){alert('Arquivo inválido.')}};r.readAsText(f)}
+function ajuda(){const F=(t,x)=>`<div class="card"><div class="t">${t}</div><div class="s">${x}</div></div>`;
+ openS(`<h2>❓ Como falar com o app</h2><div class="s">Toque no microfone, fale a frase e toque em <b>Pronto, terminei</b>. O app preenche, você <b>confere</b> e salva. Ele nunca salva sozinho.</div>
+ <h2>👤 Cadastrar cliente</h2>${F('Diga “cadastrar cliente”','“Cadastrar cliente <b>Maria Souza</b>, telefone <b>89 99999 1234</b>, CPF <b>000 000 000 00</b>, endereço <b>sítio Lopes 2</b>”<br>Diga as palavras <b>telefone</b>, <b>CPF</b> e <b>endereço</b>. O que você não falar fica em branco para completar depois.')}
+ <h2>📅 Agendar com cliente</h2>${F('Diga “cliente” antes do nome','“Visitar <b>cliente</b> Maria dia 13/5 às 4 da tarde, mostrar o orçamento”<br>“Agende atendimento ao <b>cliente</b> Maria amanhã às 10h”<br>“Responder mensagem do <b>cliente</b> Maria hoje às 15h”<br>O cliente precisa estar cadastrado, com o nome igual ao da ficha.')}
+ <h2>💰 Contas a pagar</h2>${F('Diga o valor e o dia','“Pagar conta de luz, 230 reais, dia 10, todo mês”<br>“Compra na loja do Ferreira, 10 vezes de 300, todo dia 5”<br>“Pagar boleto da escola, 450 reais, dia 20”')}
+ <h2>⏰ Lembretes e tarefas</h2>${F('Frases simples','“Me lembre de ligar para o fornecedor amanhã às 8”<br>“Daqui a 30 minutos”, “hoje às 15h”, “sexta às 9”, “dia 20”')}
+ <h2>💡 Dicas</h2>${F('Para dar certo','Fale devagar, sem pressa. Pode fazer pausas, ele só termina após 10 segundos de silêncio.<br>Confira sempre <b>nome, telefone, CPF e valores</b> antes de salvar, porque o ditado pode errar.<br>O alarme só toca com o app aberto. Para o que for importante, use também o botão da Agenda do Google.<br>Faça o <b>backup</b> (engrenagem ⚙) de vez em quando.')}
+ <div class="row"><button class="b" onclick="closeS()">Fechar</button></div>`)}
 function cfg(){const s=JSON.parse(localStorage.getItem('sec_snaps')||'[]');
  openS(`<h2>Backup</h2><div class="row"><button class="b" onclick="exp()">Baixar backup agora</button></div><label>Restaurar de um arquivo</label><input type="file" accept=".json" onchange="imp(this.files[0])">
  <label>Cópias automáticas no app (últimas 5)</label>${s.length?s.slice().reverse().map((x,k)=>`<div class="card"><span class="s">${new Date(x.t).toLocaleString('pt-BR')}</span><div class="row"><button class="b o" onclick="rs(${s.length-1-k})">Restaurar</button></div></div>`).join(''):'<div class="s">Ainda não há cópias.</div>'}
