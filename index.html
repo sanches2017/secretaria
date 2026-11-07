@@ -39,13 +39,26 @@ label{display:block;font-size:15px;color:var(--mute);margin:10px 0 3px}
 input,select,textarea{width:100%;font:inherit;padding:11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
 #al{position:fixed;inset:0;background:var(--red);color:#fff;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:14px}
 #al h1{font-size:30px;margin:0}#al .b{background:#fff;color:var(--red);font-size:20px;width:100%;max-width:320px}
+/* visual: fundo com imagem, azul-marinho e dourado */
+:root{--bg:#101a2e;--card:rgba(22,33,54,.93);--ink:#f2eee5;--mute:#b3bccb;--pet:#3a63a8;--line:#3a4a66;--gold:#e0b85a;--och:#d9a63f;--red:#e0675a;--ok:#4fae7b}
+body{background:linear-gradient(rgba(8,14,28,.70),rgba(8,14,28,.84)),url(fundo.jpg) center top/cover no-repeat #0e1626;color:var(--ink)}
+header{background:linear-gradient(135deg,rgba(16,30,58,.94),rgba(40,68,118,.88));border-bottom:2px solid var(--gold);box-shadow:0 4px 18px #0006}
+header h1{color:#fff;text-shadow:0 1px 6px #0008}
+.card{box-shadow:0 2px 10px #0006;border-radius:16px;backdrop-filter:blur(3px)}
+.hr{color:var(--gold)}
+.b.o{color:var(--gold);border-color:var(--gold)}
+nav{background:rgba(12,20,38,.96);border-top:1px solid var(--gold)}
+nav button.on{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}
+h2{color:var(--gold)}h2.red{color:var(--red)}
+.mic{background:linear-gradient(135deg,#e0b85a,#b9852c);color:#1a1405}
+.fab{color:var(--gold);border-color:var(--gold)}
 </style>
 </head>
 <body>
 <header><div><h1 id="ti">Hoje</h1><small id="dt"></small></div><button onclick="cfg()" aria-label="Configurações">⚙</button></header>
 <main id="m"></main>
 <button class="fab" id="fab" onclick="editI()" aria-label="Novo compromisso">+</button><button class="mic" onclick="mic()" aria-label="Falar">🎤</button>
-<nav><button data-v="hoje" class="on">🏠<br>Hoje</button><button data-v="agenda">📅<br>Agenda</button><button data-v="clientes">👥<br>Clientes</button></nav>
+<nav><button data-v="hoje" class="on">🏠<br>Hoje</button><button data-v="agenda">📅<br>Agenda</button><button data-v="contas">💰<br>Contas</button><button data-v="clientes">👥<br>Clientes</button></nav>
 <div id="sh" onclick="if(event.target===this)closeS()"><div id="shc"></div></div>
 <div id="al"><h1>⏰ Compromisso agora</h1><div id="alt" style="font-size:22px"></div>
 <button class="b" onclick="alDone()">Concluir</button><button class="b" onclick="alSnooze()">Adiar 10 minutos</button><button class="b" onclick="alStop()">Silenciar</button></div>
@@ -70,9 +83,9 @@ function card(i,od){const c=cl(i.cid);
  return `<div class="card ty-${i.type} ${od?'od':''}"><div onclick="editI('${i.id}')"><div class="t"><span class="hr">${i.time||'sem hora'}</span>${IC[i.type]} ${TY[i.type]}</div>
  <div class="s">${esc(i.title)}${c?' · '+esc(c.name):''}${od?' · venceu '+fd(i.date):''}</div></div>
  ${i.st==='ok'?'':`<div class="row"><button class="b g" onclick="done('${i.id}')">Concluir</button><button class="b o" onclick="snz('${i.id}')">Adiar</button></div>`}</div>`}
-function render(){const m=$('#m'),now=new Date(),td=ymd(now);
+function render(){const m=$('#m'),now=new Date(),td=ymd(now);D.p=D.p||[];
  $('#dt').textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
- $('#ti').textContent={hoje:'Hoje',agenda:'Agenda',clientes:'Clientes'}[view];
+ $('#ti').textContent={hoje:'Hoje',agenda:'Agenda',contas:'Contas',clientes:'Clientes'}[view];
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
  $('#fab').textContent=view==='clientes'?'＋':'+';
  const pend=D.i.filter(i=>i.st!=='ok').sort((a,b)=>when(a)-when(b));let h='';
@@ -80,11 +93,12 @@ function render(){const m=$('#m'),now=new Date(),td=ymd(now);
   const hj=pend.filter(i=>i.date===td&&!od.includes(i));
   if(od.length)h+='<h2 class="red">Atrasados ('+od.length+')</h2>'+od.map(i=>card(i,1)).join('');
   h+='<h2>Hoje</h2>'+(hj.length?hj.map(i=>card(i)).join(''):'<div class="empty">Nada marcado para hoje.<br>Toque em + para criar.</div>');
+  const cp=D.p.filter(b=>b.st!=='ok'&&b.date<=td).sort((a,b)=>a.date.localeCompare(b.date));if(cp.length)h+='<h2 class="red">Contas para pagar ('+cp.length+')</h2>'+cp.map(cardP).join('');
   const dias=D.lb?Math.floor((Date.now()-D.lb)/864e5):null;
   h+=`<div class="note"><span>${dias===null?'Nenhum backup feito ainda':'Último backup há '+dias+(dias==1?' dia':' dias')}</span><button class="b" onclick="exp()">Fazer backup</button></div>`;
  }else if(view==='agenda'){const f=pend.filter(i=>i.date>=td);let last='';
   h=f.length?f.map(i=>{let x='';if(i.date!==last){last=i.date;x='<h2>'+new Date(i.date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</h2>'}return x+card(i)}).join(''):'<div class="empty">Agenda vazia.</div>';
- }else{h='<input id="q" placeholder="Buscar por nome, telefone ou CPF" oninput="lc()"><div id="lst"></div>';m.innerHTML=h;lc();return}
+ }else if(view==='contas'){h=vP()}else{h='<input id="q" placeholder="Buscar por nome, telefone ou CPF" oninput="lc()"><div id="lst"></div>';m.innerHTML=h;lc();return}
  m.innerHTML=h}
 function lc(){const q=($('#q').value||'').toLowerCase();const qd=q.replace(/\D/g,'');const l=D.c.filter(c=>c.name.toLowerCase().includes(q)||(qd.length>=3&&((c.tel||'')+(c.cpf||'')).replace(/\D/g,'').includes(qd))).sort((a,b)=>a.name.localeCompare(b.name));
  $('#lst').innerHTML=l.length?l.map(c=>`<div class="card" onclick="editC('${c.id}')"><div class="t">${esc(c.name)}</div><div class="s">${esc(c.tel||'sem telefone')}</div></div>`).join(''):'<div class="empty">Nenhum cliente. Toque em + para cadastrar.</div>'}
@@ -106,9 +120,9 @@ function snz(id){openS(`<h2>Adiar para quando?</h2><div class="row"><button clas
 function mv(id,n){const i=D.i.find(x=>x.id===id),d=new Date();d.setDate(d.getDate()+n);i.date=ymd(d);i.fired=0;save();closeS();render()}
 function mvd(id,v){if(!v)return;const i=D.i.find(x=>x.id===id);i.date=v;i.fired=0;save();closeS();render()}
 function wa(tel,txt){let n=String(tel||'').replace(/\D/g,'');if(n.length<=11)n='55'+n;return 'https://wa.me/'+n+(txt?'?text='+encodeURIComponent(txt):'')}
-function gcal(i){const s=i.date.replace(/-/g,'')+'T'+(i.time||'09:00').replace(':','')+'00',e=new Date(when(i).getTime()+36e5),f=ymd(e).replace(/-/g,'')+'T'+p2(e.getHours())+p2(e.getMinutes())+'00';
- return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(TY[i.type]+': '+i.title)+'&dates='+s+'/'+f}
-function editI(id,pre){if(view==='clientes'&&!id&&!pre)return editC();
+function gcal(i){const c0=cl(i.cid),s=i.date.replace(/-/g,'')+'T'+(i.time||'09:00').replace(':','')+'00',e=new Date(when(i).getTime()+36e5),f=ymd(e).replace(/-/g,'')+'T'+p2(e.getHours())+p2(e.getMinutes())+'00';
+ return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(TY[i.type]+': '+i.title)+'&dates='+s+'/'+f+(c0?'&details='+encodeURIComponent('Cliente: '+c0.name+(c0.tel?' · Tel: '+c0.tel:''))+(c0.end?'&location='+encodeURIComponent(c0.end):''):'')}
+function editI(id,pre){if(view==='clientes'&&!id&&!pre)return editC();if(view==='contas'&&!id&&!pre)return editP();
  const i=id?D.i.find(x=>x.id===id):Object.assign({type:'vis',title:'',date:ymd(new Date()),time:'09:00',cid:'',alarm:1},pre||{});const c=cl(i.cid);
  openS(`<h2>${id?'Editar':pre?'Confirmar':'Novo'} compromisso</h2>${pre&&pre.say?`<div class="note" style="margin:0 0 6px;display:block">Você disse: “${esc(pre.say)}”<br><b>Confira e toque em Salvar.</b>${pre.newc?`<br>Cliente “${esc(pre.newc)}” não está cadastrado. <button class="b o" style="padding:6px 10px;font-size:14px" data-n="${esc(pre.newc)}" onclick="addCl(this.dataset.n)">Cadastrar agora</button>`:''}</div>`:''}
  <label>Tipo</label><select id="f_t">${Object.entries(TY).map(([k,v])=>`<option value="${k}" ${i.type===k?'selected':''}>${v}</option>`).join('')}</select>
@@ -145,6 +159,7 @@ function rs(k){const s=JSON.parse(localStorage.getItem('sec_snaps')||'[]');if(s[
 const NUM={um:1,uma:1,dois:2,duas:2,'três':3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,catorze:14,quatorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20};
 const nz=t=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function parseV(say){let T=nz(say).replace(/[.,!?]/g,' ');
+ if(/\b(pagar|pagamento|boleto|fatura|parcela|parcelas|prestacao|conta de|compra)\b/.test(T)&&/\d+\s*(reais|real)|r\$|\bvezes\b|todo (mes|dia)|mensal/.test(T))return parseP(say);
  if(/cadastr\w*\s+(um\s+|uma\s+)?(novo\s+|nova\s+)?cliente/.test(T))return parseC(say);
  T=T.replace(/\b(as|dia|das|para as|para o dia)\s+(vinte e \w+|\w+)/g,(m,a,b)=>{let n;const v=b.match(/^vinte e (\w+)$/);n=v&&NUM[v[1]]?20+NUM[v[1]]:NUM[b];return a+' '+(n||b)});
  const o={say,type:'tar',alarm:1};
@@ -178,6 +193,56 @@ function parseC(say){const T=nz(say),o={isC:1,say,name:'',tel:'',cpf:'',end:''};
  pos.forEach((p,i)=>{const g=cl_(say.slice(p.e,i+1<pos.length?pos[i+1].s:undefined));
   if(p.k==='tel')o.tel=digs(g).length>=8?fmtTel(g):g;else if(p.k==='cpf')o.cpf=digs(g).length===11?fmtCpf(g):digs(g);else o.end=g});
  return o}
+/* contas a pagar */
+const brl=v=>'R$ '+(+v||0).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+,)/g,'.');
+const num=x=>{x=String(x).trim();return x.includes(',')?parseFloat(x.replace(/\./g,'').replace(',','.'))||0:parseFloat(x)||0};
+const mdate=(y,m,dia)=>ymd(new Date(y,m,Math.min(dia,new Date(y,m+1,0).getDate())));
+const due9=b=>new Date(b.date+'T'+(b.time||'09:00')).getTime();
+function fl(b){b.a0=0;b.a1=b.av>0&&Date.now()>=due9(b)-b.av*864e5?1:0}
+function lab(a,b,c){const L=document.querySelectorAll('#al .b');L[0].textContent=a;L[1].textContent=b;L[2].textContent=c}
+function cardP(b){const od=b.st!=='ok'&&b.date<ymd(new Date()),g=b.g?D.p.filter(x=>x.g===b.g&&x.st!=='ok'):[];
+ return `<div class="card ty-pag ${od?'od':''}"><div onclick="editP('${b.id}')"><div class="t"><span class="hr">${fd(b.date)}</span>💰 ${esc(b.desc)} · ${brl(b.val)}</div><div class="s">${b.loc?esc(b.loc)+' · ':''}${b.st==='ok'?'paga':od?'venceu':'vence'} ${fd(b.date)}${g.length>1?' · faltam '+g.length+' parcelas ('+brl(g.reduce((a,x)=>a+x.val,0))+')':''}${b.rec?' · todo mês':''}</div></div>${b.st==='ok'?'':`<div class="row"><button class="b g" onclick="payBill('${b.id}')">Paguei</button><button class="b o" onclick="bsnz('${b.id}')">Remarcar</button></div>`}</div>`}
+function vP(){const mo=ymd(new Date()).slice(0,7),P=D.p,pend=P.filter(b=>b.st!=='ok').sort((a,b)=>a.date.localeCompare(b.date)),pg=P.filter(b=>b.st==='ok'&&b.date.slice(0,7)===mo),sm=a=>a.reduce((t,b)=>t+b.val,0);
+ return `<div class="note" style="margin:0 0 10px;display:block">Neste mês: falta pagar <b>${brl(sm(pend.filter(b=>b.date.slice(0,7)<=mo)))}</b><br>Já pago: <b>${brl(sm(pg))}</b></div>`+(pend.length?pend.map(cardP).join(''):'<div class="empty">Nenhuma conta a pagar.<br>Toque em + para cadastrar.</div>')+(pg.length?'<h2>Pagas neste mês</h2>'+pg.map(cardP).join(''):'')}
+function editP(id,pre){const b=id?D.p.find(x=>x.id===id):Object.assign({desc:'',val:'',date:ymd(new Date()),loc:'',av:1,kk:'unica',n:''},pre||{});
+ openS(`<h2>${id?'Editar conta':pre?'Confirmar conta':'Nova conta'}</h2>${pre&&pre.say?`<div class="note" style="margin:0 0 6px;display:block">Você disse: “${esc(pre.say)}”<br><b>Confira valor e datas e toque em Salvar.</b></div>`:''}
+ ${id?'':`<label>Tipo de conta</label><select id="p_k"><option value="unica" ${b.kk==='unica'?'selected':''}>Única</option><option value="men" ${b.kk==='men'?'selected':''}>Mensal (todo mês)</option><option value="par" ${b.kk==='par'?'selected':''}>Compra parcelada</option></select><label>Nº de parcelas (só parcelada)</label><input id="p_n" type="number" min="2" value="${b.n||''}">`}
+ <label>Descrição</label><input id="p_t" value="${esc(b.desc)}" placeholder="Ex.: Conta de luz"><label>Valor (R$)${id?'':' — de cada parcela'}</label><input id="p_v" inputmode="decimal" value="${b.val===''?'':String(b.val).replace('.',',')}">
+ <label>Vencimento${id?'':' (da 1ª parcela)'}</label><input type="date" id="p_d" value="${b.date}"><label>Pagar onde / a quem</label><input id="p_l" value="${esc(b.loc)}">
+ <label>Avisar antes do vencimento</label><select id="p_a">${[0,1,2,3].map(n=>`<option value="${n}" ${+b.av===n?'selected':''}>${n?n+(n>1?' dias':' dia')+' antes e no dia':'Só no dia'}</option>`).join('')}</select>
+ <div class="row"><button class="b" onclick="saveP('${id||''}')">Salvar</button><button class="b o" onclick="closeS()">Cancelar</button></div>
+ ${id&&b.st!=='ok'?`<div class="row"><button class="b g" onclick="payBill('${id}')">Paguei</button><button class="b o" onclick="bsnz('${id}')">Remarcar</button><button class="b r" onclick="delP('${id}')">Excluir</button></div>`:id?`<div class="row"><button class="b r" onclick="delP('${id}')">Excluir</button></div>`:''}`)}
+function saveP(id){const v=k=>$(k).value,d=v('#p_d');if(!d||!v('#p_t').trim()){alert('Preencha a descrição e o vencimento.');return}
+ const av=+v('#p_a'),base={desc:v('#p_t').trim(),val:num(v('#p_v')),loc:v('#p_l').trim(),av};
+ if(id){const b=D.p.find(x=>x.id===id);Object.assign(b,base,{date:d,dia:+d.slice(8)});fl(b)}
+ else{const k=v('#p_k'),n=k==='par'?Math.max(2,+v('#p_n')||2):1,[y,m,dd]=d.split('-').map(Number),g=uid();
+  for(let j=0;j<n;j++){const q={id:uid(),st:'pend',...base,date:j?mdate(y,m-1+j,dd):d,dia:dd};if(k==='men')q.rec=1;if(n>1){q.g=g;q.k=j+1;q.n=n;q.desc=base.desc+' '+(j+1)+'/'+n}fl(q);D.p.push(q)}}
+ save();closeS();render()}
+function payBill(id){const b=D.p.find(x=>x.id===id);if(!b)return;b.st='ok';b.paid=Date.now();
+ if(b.rec){const[y,m]=b.date.split('-').map(Number),q=Object.assign({},b,{id:uid(),st:'pend',paid:0,date:mdate(y,m,b.dia||+b.date.slice(8))});fl(q);D.p.push(q)}
+ save();closeS();render()}
+function bsnz(id){openS(`<h2>Pagar quando?</h2><div class="row"><button class="b" onclick="bmv('${id}',1)">Amanhã</button><button class="b" onclick="bmv('${id}',2)">Em 2 dias</button><button class="b" onclick="bmv('${id}',3)">Em 3 dias</button></div><label>Outra data</label><input type="date" onchange="bmvd('${id}',this.value)"><div class="row"><button class="b o" onclick="closeS()">Cancelar</button></div>`)}
+function bmv(id,n){const d=new Date();d.setDate(d.getDate()+n);bmvd(id,ymd(d))}
+function bmvd(id,v){if(!v)return;const b=D.p.find(x=>x.id===id);b.date=v;fl(b);save();closeS();render()}
+function delP(id){if(confirm('Excluir esta conta?')){D.p=D.p.filter(x=>x.id!==id);save();closeS();render()}}
+function ringP(b,e){cur={pv:1,id:b.id};if(e)b.a1=1;else b.a0=1;save();lab('Já paguei','Remarcar pagamento','Ok, avisar no dia');
+ $('#al h1').textContent=e?'💰 Conta a vencer':'💰 Conta vence agora';$('#alt').textContent=(e?'Vence '+fd(b.date)+': ':'Vence hoje: ')+b.desc+' · '+brl(b.val)+(b.loc?' · '+b.loc:'');
+ $('#al').style.display='flex';beep();clearInterval(beepT);beepT=setInterval(beep,1200)}
+function tickP(){const n=Date.now();for(const b of D.p||[]){if(b.st==='ok')continue;const du=due9(b);
+ if(b.av>0&&!b.a1&&n>=du-b.av*864e5&&n<du){ringP(b,1);return}
+ if(!b.a0&&n>=du&&n-du<216e5){ringP(b,0);return}}}
+function missed(){const lo=+localStorage.getItem('sec_lo')||0,n=Date.now();if(!lo||$('#sh').style.display==='flex')return;
+ const a=D.i.filter(i=>i.st!=='ok'&&i.time&&!i.fired&&when(i)>lo&&when(i)<n-36e5).map(i=>fd(i.date)+' '+i.time+' · '+TY[i.type]+' · '+esc(i.title)),
+ b=(D.p||[]).filter(x=>x.st!=='ok'&&due9(x)>lo&&n-due9(x)>=216e5).map(x=>fd(x.date)+' · Conta: '+esc(x.desc)+' '+brl(x.val));
+ if(a.length+b.length)openS('<h2>Passou enquanto o app estava fechado</h2>'+a.concat(b).map(t=>'<div class="card od"><div class="s">'+t+'</div></div>').join('')+'<div class="row"><button class="b" onclick="closeS()">Ok</button></div>')}
+function parseP(say){const T=nz(say).replace(/[!?]/g,' '),o={isP:1,say,kk:'unica',av:1};let m;
+ if(m=T.match(/(\d+)\s*(?:vezes|x)\b(?:\s*de\s*(?:r\$\s*)?(\d+(?:\.\d{3})*(?:,\d+)?|\d+\.\d+))?/)){o.kk='par';o.n=+m[1];if(m[2])o.val=m[2]}
+ if(!o.val&&(m=T.match(/(\d+(?:\.\d{3})*(?:,\d+)?|\d+\.\d+)\s*(?:reais|real)|r\$\s*(\d+(?:\.\d{3})*(?:,\d+)?|\d+\.\d+)/)))o.val=m[1]||m[2];
+ if(o.kk!=='par'&&/todo mes|mensal|todo dia/.test(T))o.kk='men';
+ const n=new Date();let dd=(T.match(/dia (\d{1,2})/)||[])[1];
+ if(dd){dd=+dd;let d=new Date(n.getFullYear(),n.getMonth(),dd);if(d<new Date(ymd(n)+'T00:00'))d=new Date(n.getFullYear(),n.getMonth()+1,dd);o.date=ymd(d)}else o.date=ymd(n);
+ let t=say.replace(/^\s*(agende|agendar|marque|anote|crie|me lembre)( me| um| uma| de)?\s*/i,'').replace(/\d+\s*(vezes|x)( de)?\s*(r\$\s*)?[\d.,]*/i,' ').replace(/(r\$\s*)?[\d.,]+\s*(reais|real)/i,' ').replace(/(todo dia|dia)\s*\d+/i,' ').replace(/todo mês|mensal|,/gi,' ').replace(/\s+/g,' ').trim();
+ o.desc=t.charAt(0).toUpperCase()+t.slice(1);return o}
 let mr=null;
 function mic(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!R){alert('Este navegador não tem reconhecimento de voz. Use o Chrome (Android ou computador) ou digite com o botão +.');return}
@@ -185,7 +250,7 @@ function mic(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;
  openS('<h2>🎤 Pode falar…</h2><div class="s" style="font-size:15px">Ex.: agende visita na obra do Carlos amanhã às nove</div><div id="lv" style="font-size:22px;min-height:70px;margin:12px 0"></div><div class="row"><button class="b g" onclick="endMic()">Pronto, terminei</button><button class="b o" onclick="stopMic()">Cancelar</button></div>');
  r.onresult=e=>{let t='';for(const x of e.results){const q=x[0].transcript.trim();if(q.startsWith(t))t=q;else if(!t.includes(q))t+=' '+q}txt=t.trim();$('#lv').textContent=txt;clearTimeout(st);st=setTimeout(()=>{try{r.stop()}catch(_){}},10000)};
  r.onerror=e=>{err=e.error};
- r.onend=()=>{if(mr!==r)return;mr=null;if(txt.trim()){closeS();const p=parseV(txt);p.isC?editC(null,p):editI(null,p)}else{closeS();alert(err==='not-allowed'||err==='service-not-allowed'?'Permita o uso do microfone no navegador.':err==='network'?'A voz precisa de internet.':'Não ouvi nada. Toque no microfone e fale de novo.')}};
+ r.onend=()=>{if(mr!==r)return;mr=null;if(txt.trim()){closeS();const p=parseV(txt);p.isC?editC(null,p):p.isP?editP(null,p):editI(null,p)}else{closeS();alert(err==='not-allowed'||err==='service-not-allowed'?'Permita o uso do microfone no navegador.':err==='network'?'A voz precisa de internet.':'Não ouvi nada. Toque no microfone e fale de novo.')}};
  mr=r;try{r.start()}catch(e){mr=null;closeS()}}
 function endMic(){try{mr&&mr.stop()}catch(e){}}
 function addCl(n){const f=k=>$(k).value,id=uid();D.c.push({id,name:n,tel:'',end:''});save();editI(null,{type:f('#f_t'),title:f('#f_ti').trim(),date:f('#f_d'),time:f('#f_h'),alarm:$('#f_a').checked?1:0,cid:id})}
@@ -193,11 +258,11 @@ function stopMic(){const r=mr;mr=null;try{r.abort()}catch(e){}closeS()}
 /* alarme */
 let aud,beepT,cur=null;
 function beep(){try{aud=aud||new (window.AudioContext||window.webkitAudioContext)();const o=aud.createOscillator(),g=aud.createGain();o.type='square';o.frequency.value=880;g.gain.value=.5;o.connect(g);g.connect(aud.destination);o.start();o.stop(aud.currentTime+.35)}catch(e){}if(navigator.vibrate)navigator.vibrate([400,200,400])}
-function ring(i){cur=i;i.fired=1;save();$('#alt').textContent=TY[i.type]+' — '+i.title+(cl(i.cid)?' · '+cl(i.cid).name:'');$('#al').style.display='flex';beep();clearInterval(beepT);beepT=setInterval(beep,1200)}
+function ring(i){cur=i;i.fired=1;save();lab('Concluir','Adiar 10 minutos','Silenciar');$('#al h1').textContent='⏰ Compromisso agora';$('#alt').textContent=TY[i.type]+' — '+i.title+(cl(i.cid)?' · '+cl(i.cid).name:'');$('#al').style.display='flex';beep();clearInterval(beepT);beepT=setInterval(beep,1200)}
 function alStop(){clearInterval(beepT);$('#al').style.display='none'}
-function alDone(){alStop();if(cur)done(cur.id)}
-function alSnooze(){alStop();if(cur){const d=new Date(Date.now()+6e5);cur.date=ymd(d);cur.time=p2(d.getHours())+':'+p2(d.getMinutes());cur.fired=0;save();render()}}
-setInterval(()=>{const n=new Date();if($('#al').style.display==='flex')return;const i=D.i.find(x=>x.st!=='ok'&&x.alarm&&!x.fired&&x.time&&when(x)<=n&&n-when(x)<36e5);if(i)ring(i);render_t()},10000);
+function alDone(){alStop();if(cur)cur.pv?payBill(cur.id):done(cur.id)}
+function alSnooze(){alStop();if(cur&&cur.pv){bsnz(cur.id);return}if(cur){const d=new Date(Date.now()+6e5);cur.date=ymd(d);cur.time=p2(d.getHours())+':'+p2(d.getMinutes());cur.fired=0;save();render()}}
+setInterval(()=>{const n=new Date();if($('#al').style.display==='flex')return;const i=D.i.find(x=>x.st!=='ok'&&x.alarm&&!x.fired&&x.time&&when(x)<=n&&n-when(x)<36e5);if(i)ring(i);else tickP();try{localStorage.setItem('sec_lo',Date.now())}catch(e){}render_t()},10000);
 function render_t(){if($('#sh').style.display!=='flex'&&view!=='clientes')render()}
 document.addEventListener('click',()=>{try{aud=aud||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}},{once:true});
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
@@ -206,6 +271,7 @@ try{const mf={name:'Secretária de bolso',short_name:'Secretária',start_url:'.'
  const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/manifest+json'}));document.head.appendChild(l)}catch(e){}
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 render();
+setTimeout(missed,400);
 if(D.lb&&Date.now()-D.lb>864e5||!D.lb&&D.i.length)setTimeout(()=>{if(confirm('Fazer o backup de hoje?'))exp()},800);
 </script>
 </body>
